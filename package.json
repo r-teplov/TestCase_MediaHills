@@ -1,0 +1,14 @@
+{
+  "name": "testcase_mediahills",
+  "version": "1.0.0",
+  "description": "test case for MediaHills",
+  "main": "index.js",
+  "scripts": {
+    "start": "node scripts/index.js"
+  },
+  "author": "r.teplov",
+  "license": "ISC",
+  "dependencies": {
+    "mysql2": "^2.3.2"
+  }
+}
