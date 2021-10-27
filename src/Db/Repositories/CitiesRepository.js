@@ -9,10 +9,16 @@ class CitiesRepository extends AbstractDbRepository {
     }
 
     /**
+     * @param {Number[]} geoIds
      * @returns {Promise<{}[]>}
      */
-    findCities() {
-        return this.findAll('SELECT geoId, tvID, mh_city_id_timeshift FROM ' + this.table + ' ORDER BY geoId');
+    findByGeoIds(geoIds) {
+        return this.findAll(
+            'SELECT geoId, tvID, mh_city_id_timeshift ' +
+            'FROM ' + this.table + ' ' +
+            'WHERE geoId IN (' + geoIds.map(() => { return '?'; }).join() + ')' +
+            'ORDER BY geoId',
+            geoIds);
     }
 }
 
