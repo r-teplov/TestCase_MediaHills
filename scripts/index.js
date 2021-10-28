@@ -4,6 +4,7 @@ const {db} = require('../src/Db/Db');
 const CitiesRepository = require('../src/Db/Repositories/CitiesRepository');
 const StatisticRepository = require('../src/Db/Repositories/StatisticRepository');
 const FileStorage = require('../src/IO/FileStorage');
+const HttpStorage = require('../src/IO/HttpStorage');
 const {formatAsMysqlString} = require('../src/Helpers/Date');
 
 const geoIds = [13, 21, 237];
@@ -17,6 +18,7 @@ geoIds.forEach(geoId => {
     statsRepositories.set(geoId, new StatisticRepository(viewsYear, viewsMonth + 1, geoId, db));
 });
 const fileStorage = new FileStorage(path.join(__dirname, '../data/files/'));
+const httpStorage = new HttpStorage();
 
 /**
  * @param {Array} cities
@@ -106,7 +108,11 @@ citiesRepository.findByGeoIds(geoIds)
                     })
                     .then(result => {
                         const json = JSON.stringify(result);
-                        return fileStorage.store(geoId, currentDate, json).then(() => json);
+
+                        return fileStorage.store(geoId, currentDate, json)
+                            .then(() => {
+                                return httpStorage.store(json);
+                            });
                     }));
             });
 
