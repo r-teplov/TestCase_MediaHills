@@ -24,7 +24,7 @@ class Db {
      */
     execute(query, params) {
         return this.pool.getConnection().then(connection => {
-            const result = connection.execute(query, params);
+            const result = connection.query(query, params);
             connection.release();
 
             return result;
@@ -43,6 +43,18 @@ class Db {
         return this.execute(query, params).then(rows => {
             return Array.isArray(rows) ? rows : [];
         });
+    }
+
+    /**
+     * @param {String} table
+     * @param {Object} data
+     * @returns {Promise<[{}]>}
+     */
+    insert(table, data) {
+        const query = 'INSERT INTO ?? (??) VALUES (?)';
+        const params = [table, Object.keys(data), Object.values(data)];
+
+        return this.execute(query, params);
     }
 
     /**

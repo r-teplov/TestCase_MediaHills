@@ -21,7 +21,7 @@ class HttpStorage {
 
                 return {
                     status: response.status,
-                    body: response.data,
+                    body: typeof response.data === 'string' ? response.data : '',
                     duration: (timeEnd.getTime() - timeFrom.getTime()) / 1000
                 };
             })

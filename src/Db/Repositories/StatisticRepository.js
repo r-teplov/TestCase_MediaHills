@@ -22,7 +22,6 @@ class StatisticRepository extends AbstractDbRepository {
      */
     findByDateAndTvIds(date, tvIds) {
         const params = [];
-        const tvIdsCondition = tvIds.map(() => { return '?'; }).join();
 
         date.setHours(0);
         date.setMinutes(0);
@@ -34,13 +33,13 @@ class StatisticRepository extends AbstractDbRepository {
         date.setSeconds(59);
         params.push(formatAsMysqlString(date));
 
-        params.push(...tvIds);
+        params.push(tvIds);
 
         return this.findAll(
             'SELECT b.num_key, a.sTimeMsk, a.dur ' +
             'FROM ' + this.table + ' a ' +
             'JOIN num_keys b ON b.num = a.num ' +
-            'WHERE 1 AND a.sTimeMsk BETWEEN ? AND ? AND a.tvId IN (' + tvIdsCondition + ')',
+            'WHERE 1 AND a.sTimeMsk BETWEEN ? AND ? AND a.tvId IN (?)',
             params
         );
     }

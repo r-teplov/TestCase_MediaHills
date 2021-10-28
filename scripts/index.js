@@ -3,6 +3,7 @@ const path = require('path');
 const {db} = require('../src/Db/Db');
 const CitiesRepository = require('../src/Db/Repositories/CitiesRepository');
 const StatisticRepository = require('../src/Db/Repositories/StatisticRepository');
+const StatisticRequestRepository = require('../src/Db/Repositories/StatisticRequestRepository');
 const FileStorage = require('../src/IO/FileStorage');
 const HttpStorage = require('../src/IO/HttpStorage');
 const {formatAsMysqlString} = require('../src/Helpers/Date');
@@ -17,6 +18,7 @@ const statsRepositories = new Map();
 geoIds.forEach(geoId => {
     statsRepositories.set(geoId, new StatisticRepository(viewsYear, viewsMonth + 1, geoId, db));
 });
+const requestRepository = new StatisticRequestRepository(db);
 const fileStorage = new FileStorage(path.join(__dirname, '../data/files/'));
 const httpStorage = new HttpStorage();
 
@@ -110,8 +112,9 @@ citiesRepository.findByGeoIds(geoIds)
                         const json = JSON.stringify(result);
 
                         return fileStorage.store(geoId, currentDate, json)
-                            .then(() => {
-                                return httpStorage.store(json);
+                            .then(() => httpStorage.store(json))
+                            .then(requestParam => {
+                                return requestRepository.save(requestParam);
                             });
                     }));
             });
