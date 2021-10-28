@@ -4,7 +4,7 @@ const axios = require('axios');
 class HttpStorage {
     /**
      * @param {String} data
-     * @returns {Promise<{body: *, status: *} | {body: string, status: number}>}
+     * @returns {Promise<{status: Number, body: String, duration: Number}>}
      */
     store(data) {
         const requestConfig = {
@@ -13,17 +13,25 @@ class HttpStorage {
             }
         };
 
+        const timeFrom = new Date();
+
         return axios.post(config.endPoint, data, requestConfig)
             .then(response => {
+                const timeEnd = new Date();
+
                 return {
                     status: response.status,
-                    body: response.data
+                    body: response.data,
+                    duration: (timeEnd.getTime() - timeFrom.getTime()) / 1000
                 };
             })
             .catch(error => {
+                const timeEnd = new Date();
+
                 const result = {
                     status: 0,
-                    body: ''
+                    body: '',
+                    duration: (timeEnd.getTime() - timeFrom.getTime()) / 1000
                 };
 
                 if (error.response) {
