@@ -1,6 +1,9 @@
+const path = require('path');
+
 const {db} = require('../src/Db/Db');
 const CitiesRepository = require('../src/Db/Repositories/CitiesRepository');
 const StatisticRepository = require('../src/Db/Repositories/StatisticRepository');
+const FileStorage = require('../src/IO/FileStorage');
 const {formatAsMysqlString} = require('../src/Helpers/Date');
 
 const geoIds = [13, 21, 237];
@@ -13,6 +16,7 @@ const statsRepositories = new Map();
 geoIds.forEach(geoId => {
     statsRepositories.set(geoId, new StatisticRepository(viewsYear, viewsMonth + 1, geoId, db));
 });
+const fileStorage = new FileStorage(path.join(__dirname, '../data/files/'));
 
 /**
  * @param {Array} cities
@@ -67,17 +71,23 @@ const addView = (geoId, numKey, timeShift, viewDate, keys, result) => {
 
 citiesRepository.findByGeoIds(geoIds)
     .then(cities => {
-        return mapTvIds(cities);
+        return fileStorage.createStorageDir()
+            .then(() => {
+                return mapTvIds(cities);
+            });
     })
     .then(cities => {
         const promises = [];
-        const keys = new Map();
-        const result = [];
 
         while (initialDate.getMonth() === viewsMonth) {
             cities.forEach(({tvIds, timeShift}, geoId) => {
-                promises.push(statsRepositories.get(geoId).findByDateAndTvIds(initialDate, tvIds)
+                const currentDate = new Date(initialDate);
+
+                promises.push(statsRepositories.get(geoId).findByDateAndTvIds(currentDate, tvIds)
                     .then(statistic => {
+                        const keys = new Map();
+                        const result = [];
+
                         statistic.forEach(({num_key, sTimeMsk, dur}) => {
                             const viewDate = new Date(sTimeMsk);
                             viewDate.setSeconds(0);
@@ -92,14 +102,18 @@ citiesRepository.findByGeoIds(geoIds)
                             }
                         });
 
-                        return statistic;
+                        return result;
+                    })
+                    .then(result => {
+                        const json = JSON.stringify(result);
+                        return fileStorage.store(geoId, currentDate, json).then(() => json);
                     }));
             });
 
             initialDate.setTime(initialDate.getTime() + 24 * 60 * 60 * 1000);
         }
 
-        return Promise.all([result, keys, ...promises]);
+        return Promise.all(promises);
     })
     .finally(() => {
         return db.closeConnections();
